@@ -39,6 +39,9 @@ else
     fi
 fi
 
+# Create ~/.ssh if not exist
+docker exec --user="nginx" -it $CONTAINER_NAME sh -c 'mkdir -p ~/.ssh'
+
 # Delete all broken symbolic links to nginx config files
 docker exec -it $CONTAINER_NAME sh -c 'cd /etc/nginx/conf.d && find -L . -name . -o -type d -prune -o -type l -exec rm {} +'
 

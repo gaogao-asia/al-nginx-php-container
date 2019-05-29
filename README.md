@@ -43,6 +43,8 @@ docker network rm <network_name>
 ```
 
 ### Create and/or Start Container
+Note: If it is the first time to use the latest container image, it will download an image of approximately 700MB. Do it under preferably fast and steady internet connection.
+
 start.sh script creates the container if not exists yet,  
 or starts container if there is one stopped.  
 If it is running already, it dose nothing.
