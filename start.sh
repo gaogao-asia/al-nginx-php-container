@@ -48,6 +48,14 @@ docker exec -it $CONTAINER_NAME sh -c 'cd /etc/nginx/conf.d && find -L . -name .
 # Create symbolic link to nginx config files in .dev/nginx dir of each project dir.
 docker exec -it $CONTAINER_NAME sh -c 'find /var/www/html -maxdepth 4 -path "*/.dev/nginx/*.conf" | sed "s%\(/var/www/html/\)\([^/.]*\)\(/.*\)%\1\2\3 /etc/nginx/conf.d/\2.conf%" | xargs -n 2 ln -s 2> /dev/null'
 
+# Add hostname set as server_name in nginx conf files in each application to /etc/hosts in the container.
+# This is required for some tests when phpunit is executed inside of the container.
+for filename in `find ${DOCKER_VOLUME_DIR} -maxdepth 4 -path "*/.dev/nginx/*.conf"`; do
+  # Use `[[:space:]]` because `\s` does not work on macOS.
+  hostname=$(grep -i 'server_name' $filename | sed -E 's/[[:space:]]+server_name[[:space:]]+([^;]+);/\1/')
+  docker exec -it $CONTAINER_NAME sh -c "if !(grep -Fqw \"$hostname\" /etc/hosts); then echo -e \"127.0.0.1\t$hostname\" >> /etc/hosts; fi"
+done
+
 # Start http service on container
 docker exec -it $CONTAINER_NAME service php-fpm-7.2 start
 docker exec -it $CONTAINER_NAME service nginx start
