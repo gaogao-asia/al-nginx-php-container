@@ -54,5 +54,5 @@ for filename in `find ${DOCKER_VOLUME_DIR} -maxdepth 4 -path "*/.dev/nginx/*.con
 done
 
 # Start http service on container
-docker exec -it $CONTAINER_NAME service php-fpm-7.2 restart
+docker exec -it $CONTAINER_NAME service php-fpm-7.3 restart
 docker exec -it $CONTAINER_NAME service nginx restart

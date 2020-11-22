@@ -1,5 +1,5 @@
 # Web Server Container for October Projects
-This is container running Nginx 1.14 with PHP 7.2 on Amazon Linux.  
+This is container running Nginx 1.18 with PHP 7.3 on Amazon Linux.  
 This is prepared as development environment for October CMS projects.
 
 This environment downloads prebuilt image from [Docker Hub](https://cloud.docker.com/u/spycetek/repository/docker/spycetek/aep).  
