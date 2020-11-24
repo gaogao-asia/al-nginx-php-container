@@ -28,8 +28,8 @@ else
         set +x
         echo "$CONTAINER_NAME container is already stopped."
     else
-        docker exec -it $CONTAINER_NAME service nginx stop
-        docker exec -it $CONTAINER_NAME service php-fpm-7.3 stop
+        docker exec -it $CONTAINER_NAME systemctl stop nginx
+        docker exec -it $CONTAINER_NAME systemctl stop php-fpm
         sleep 2s
 
         docker-compose stop

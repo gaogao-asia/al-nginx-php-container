@@ -4,8 +4,10 @@ version: '3'
 services:
   october-web-server:
     env_file: .env
-    image: spycetek/aep:a2018.03.0-1.18-7.3-1
-    entrypoint: /root/start_nginx_php-fpm.sh
+    image: spycetek/aep:a2.0-1.18-7.4-1
+    privileged: true
+    command: /sbin/init
+    #entrypoint: /root/start_nginx_php-fpm.sh
     container_name: ${CONTAINER_NAME}
     restart: unless-stopped
     ports:

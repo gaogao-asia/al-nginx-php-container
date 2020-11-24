@@ -28,10 +28,6 @@ else
     if [ "$status" = "false" ]; then # container not running
         set +x
         echo "$CONTAINER_NAME container is already stopped."
-    else
-        docker exec -it $CONTAINER_NAME service nginx stop
-        docker exec -it $CONTAINER_NAME service php-fpm-7.3 stop
-        sleep 2s
     fi
 
     docker-compose down

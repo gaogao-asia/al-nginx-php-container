@@ -47,12 +47,13 @@ docker exec -it $CONTAINER_NAME sh -c 'find /var/www/html -maxdepth 4 -path "*/.
 
 # Add hostname set as server_name in nginx conf files in each application to /etc/hosts in the container.
 # This is required for some tests when phpunit is executed inside of the container.
-for filename in `find ${DOCKER_VOLUME_DIR} -maxdepth 4 -path "*/.dev/nginx/*.conf"`; do
+# The part from `2>&1 |...` is for excluding error message from directories that requires admin access.
+for filename in `find ${DOCKER_VOLUME_DIR} -maxdepth 4 -path "*/.dev/nginx/*.conf" 2>&1 | fgrep -v "Permission denied"`; do
   # Use `[[:space:]]` because `\s` does not work on macOS.
   hostname=$(grep -i 'server_name' $filename | sed -E 's/[[:space:]]+server_name[[:space:]]+([^;]+);/\1/')
   docker exec -it $CONTAINER_NAME sh -c "if !(grep -Fqw \"$hostname\" /etc/hosts); then echo -e \"127.0.0.1\t$hostname\" >> /etc/hosts; fi"
 done
 
-# Start http service on container
-docker exec -it $CONTAINER_NAME service php-fpm-7.3 restart
-docker exec -it $CONTAINER_NAME service nginx restart
+# Restart http & php services on container
+docker exec -it $CONTAINER_NAME systemctl restart php-fpm
+docker exec -it $CONTAINER_NAME systemctl restart nginx
