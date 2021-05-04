@@ -2,6 +2,7 @@
 # The Docker image is based on https://hub.docker.com/_/ubuntu/
 version: '3'
 services:
+  # Nginx & PHP
   october-web-server:
     env_file: .env
     image: spycetek/aep:a2.0-1.18-7.4-2
@@ -19,6 +20,21 @@ services:
       # Don't mount to /var/www because it's web server user's home directory
       # and we don't want to mess it up.
       - ${DOCKER_VOLUME_DIR}:/var/www/html:cached
+
+  # Enable HTTPS with localhost
+  https-portal:
+    image: steveltn/https-portal:1
+    container_name: https-portal
+    ports:
+      - '443:443'
+      - "50081:80" # Not used, but for preventing host:80 mapped to https-portal:80
+    links:
+      - october-web-server
+    environment:
+      STAGE: local
+      DOMAINS: ${HTTPS_DOMAINS}
+    networks:
+      - local-net
 
 # Network is required to enable container access another container.
 networks:
