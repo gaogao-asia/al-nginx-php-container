@@ -30,7 +30,7 @@ else
         echo "$CONTAINER_NAME container is already stopped."
     fi
 
-    docker-compose down
+    docker compose down
 fi
 set +x
 echo -e "database container was kept intact to keep the data.\n" \

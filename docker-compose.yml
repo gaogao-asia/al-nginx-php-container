@@ -20,6 +20,10 @@ services:
       # Don't mount to /var/www because it's web server user's home directory
       # and we don't want to mess it up.
       - ${DOCKER_VOLUME_DIR}:/var/www/html:cached
+    environment:
+      # This is used to know if the container is created by this docker-compose
+      # from inside of the container.
+      - IS_OCT_CONTAINER=1
 
   # Enable HTTPS with localhost
   https-portal:

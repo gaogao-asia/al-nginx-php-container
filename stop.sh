@@ -32,6 +32,6 @@ else
         docker exec -it $CONTAINER_NAME systemctl stop php-fpm
         sleep 2s
 
-        docker-compose stop
+        docker compose stop
     fi
 fi

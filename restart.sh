@@ -30,12 +30,12 @@ fi
 
 status=`docker inspect -f {{.State.Running}} $CONTAINER_NAME`
 if [ $? -eq 1 ]; then # container not exist yet
-    docker-compose up -d
+    docker compose up -d
 else
     if [ "$status" = "false" ]; then # container not running
-        docker-compose start
+        docker compose start
     else
-        docker-compose restart
+        docker compose restart
     fi
 fi
 
