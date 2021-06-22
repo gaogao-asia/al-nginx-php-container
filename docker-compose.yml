@@ -37,6 +37,7 @@ services:
     environment:
       STAGE: local
       DOMAINS: ${HTTPS_DOMAINS}
+      CLIENT_MAX_BODY_SIZE: 50M
     networks:
       - local-net
 
