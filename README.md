@@ -1,6 +1,6 @@
-# Web Server Container for October Projects
-This is container running Nginx 1.18 with PHP 7.3 on Amazon Linux.  
-This is prepared as development environment for October CMS projects.
+# Web Server Container with Amazon Linux & Nginx & PHP
+This is container running Nginx 1.20 with PHP 8.0 on Amazon Linux.  
+This is prepared as development projects.
 
 This environment downloads prebuilt image from [Docker Hub](https://cloud.docker.com/u/spycetek/repository/docker/spycetek/aep).  
 Dockerfile is defined in [spycetek/aep](https://bitbucket.org/spycetek/aep) repository.
@@ -10,14 +10,14 @@ Create .env file by copying .env.dest file.
 
 Change `DOCKER_VOLUME_DIR` variable to the local path you want to mount to container's document root of the web server.
 
-In the example below, you should put directories of October projects under docker_october-web-server directory.
+In the example below, you should put directories of PHP projects under docker-www directory.
 ```
-DOCKER_VOLUME_DIR=/Users/kanji/development/docker_october-web-server
+DOCKER_VOLUME_DIR=/Users/MyName/Documents/development/php_workspace/docker-www
 ```
 
 ```
-/Users/kanji/development/docker_october-web-server/october-project1
-/Users/kanji/development/docker_october-web-server/october-project2
+/Users/MyName/Documents/development/php_workspace/docker-www/php-project1
+/Users/MyName/Documents/development/php_workspace/docker-www/php-project2
 ```
 
 You can also change `CONTAINER_NAME` and `HTTP_PORT` if you wish.
@@ -25,7 +25,8 @@ You can also change `CONTAINER_NAME` and `HTTP_PORT` if you wish.
 
 ## Controlling Web Server Container
 ### Create docker network
-If you have not created a docker network named `local-net`, create it with the command below.  
+If you have not created a docker network with the name specified in .env file,
+create it with the command below. Example uses `local-net` as its name.  
 If you already have it, skip to "Create & Start Container" section.
 
 ```
