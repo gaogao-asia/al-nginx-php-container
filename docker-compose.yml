@@ -15,7 +15,7 @@ services:
       - "${HTTP_PORT}:80"
       - "80:80"
     networks:
-      - local-net
+      - mynetwork
     volumes:
       # Don't mount to /var/www because it's web server user's home directory
       # and we don't want to mess it up.
@@ -39,9 +39,10 @@ services:
       DOMAINS: ${HTTPS_DOMAINS}
       CLIENT_MAX_BODY_SIZE: 50M
     networks:
-      - local-net
+      - mynetwork
 
 # Network is required to enable container access another container.
 networks:
-  local-net:
+  mynetwork:
+    name: ${NETWORK_NAME}
     external: true

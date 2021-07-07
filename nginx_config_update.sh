@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# Network name is hardcoded in docker-compose.yml
-NETWORK_NAME=local-net
-
 # cd to the directory where this file exists
 cd $( dirname "${BASH_SOURCE[0]}" )
 if [[ ! -f .env ]]
