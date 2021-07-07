@@ -1,11 +1,10 @@
-# Create development environment for cocci-custom OctoberCMS project.
 # The Docker image is based on https://hub.docker.com/_/ubuntu/
 version: '3'
 services:
   # Nginx & PHP
-  october-web-server:
+  web-server:
     env_file: .env
-    image: spycetek/aep:a2.0-1.18-7.4-2
+    image: spycetek/aep:a2.0-1.20-8.0-1
     privileged: true
     command: /sbin/init
     #entrypoint: /root/start_nginx_php-fpm.sh
@@ -20,26 +19,29 @@ services:
       # Don't mount to /var/www because it's web server user's home directory
       # and we don't want to mess it up.
       - ${DOCKER_VOLUME_DIR}:/var/www/html:cached
-    environment:
-      # This is used to know if the container is created by this docker-compose
-      # from inside of the container.
-      - IS_OCT_CONTAINER=1
+    # environment:
+    #   # This is used to know if the container is created by this docker-compose
+    #   # from inside of the container.
+    #   - IS_OCT_CONTAINER=1
 
-  # Enable HTTPS with localhost
-  https-portal:
-    image: steveltn/https-portal:1
-    container_name: https-portal
-    ports:
-      - '443:443'
-      - "50081:80" # Not used, but for preventing host:80 mapped to https-portal:80
-    links:
-      - october-web-server
-    environment:
-      STAGE: local
-      DOMAINS: ${HTTPS_DOMAINS}
-      CLIENT_MAX_BODY_SIZE: 50M
-    networks:
-      - mynetwork
+  # # Enable HTTPS with localhost
+  # https-portal:
+  #   image: steveltn/https-portal:1
+  #   container_name: https-portal
+  #   ports:
+  #     - '443:443'
+  #     - "50081:80" # Not used, but for preventing host:80 mapped to https-portal:80
+  #   links:
+  #     - october-web-server
+  #   environment:
+  #     STAGE: local
+  #     DOMAINS: ${HTTPS_DOMAINS}
+  #     CLIENT_MAX_BODY_SIZE: 50M
+  #     PROXY_CONNECT_TIMEOUT: 1200
+  #     PROXY_SEND_TIMEOUT: 1200
+  #     PROXY_READ_TIMEOUT: 1200
+  #   networks:
+  #     - mynetwork
 
 # Network is required to enable container access another container.
 networks:
