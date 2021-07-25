@@ -52,5 +52,5 @@ done
 
 # Restart http service on container
 echo "Restarting php-fpm and nginx..."
-docker exec -it $CONTAINER_NAME service php-fpm-7.3 restart
-docker exec -it $CONTAINER_NAME service nginx restart
+docker exec -it $CONTAINER_NAME systemctl restart php-fpm
+docker exec -it $CONTAINER_NAME systemctl restart nginx
