@@ -45,6 +45,12 @@ docker exec -it $CONTAINER_NAME sh -c 'cd /etc/nginx/conf.d && find -L . -name .
 # Create symbolic link to nginx config files in .dev/nginx dir of each project dir.
 docker exec -it $CONTAINER_NAME sh -c 'find /var/www/html -maxdepth 4 -path "*/.dev/nginx/*.conf" | sed "s%\(/var/www/html/\)\([^/.]*\)\(/.*\)%\1\2\3 /etc/nginx/conf.d/\2.conf%" | xargs -n 2 ln -s 2> /dev/null'
 
+# Delete all broken symbolic links to php config files
+docker exec -it $CONTAINER_NAME sh -c 'cd /etc/php.d && find -L . -name . -o -type d -prune -o -type l -exec rm {} +'
+
+# Create symbolic link to nginx config files in .dev/nginx dir of each project dir.
+docker exec -it $CONTAINER_NAME sh -c 'find /var/www/html -maxdepth 4 -path "*/.dev/php/*.ini" | sed "s%\(/var/www/html/\)\([^/.]*\)\(/.*\)%\1\2\3 /etc/php.d/\2.ini%" | xargs -n 2 ln -s 2> /dev/null'
+
 # Add hostname set as server_name in nginx conf files in each application to /etc/hosts in the container.
 # This is required for some tests when phpunit is executed inside of the container.
 # The part from `2>&1 |...` is for excluding error message from directories that requires admin access.
