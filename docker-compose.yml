@@ -24,24 +24,24 @@ services:
     #   # from inside of the container.
     #   - IS_OCT_CONTAINER=1
 
-  # # Enable HTTPS with localhost
-  # https-portal:
-  #   image: steveltn/https-portal:1
-  #   container_name: https-portal
-  #   ports:
-  #     - '443:443'
-  #     - "50081:80" # Not used, but for preventing host:80 mapped to https-portal:80
-  #   links:
-  #     - october-web-server
-  #   environment:
-  #     STAGE: local
-  #     DOMAINS: ${HTTPS_DOMAINS}
-  #     CLIENT_MAX_BODY_SIZE: 50M
-  #     PROXY_CONNECT_TIMEOUT: 1200
-  #     PROXY_SEND_TIMEOUT: 1200
-  #     PROXY_READ_TIMEOUT: 1200
-  #   networks:
-  #     - mynetwork
+  # Enable HTTPS with localhost
+  https-portal:
+    image: steveltn/https-portal:1
+    container_name: https-portal
+    ports:
+      - '443:443'
+      - "50081:80" # Not used, but for preventing host:80 mapped to https-portal:80
+    links:
+      - web-server
+    environment:
+      STAGE: local
+      DOMAINS: ${HTTPS_DOMAINS}
+      CLIENT_MAX_BODY_SIZE: 50M
+      PROXY_CONNECT_TIMEOUT: 1200
+      PROXY_SEND_TIMEOUT: 1200
+      PROXY_READ_TIMEOUT: 1200
+    networks:
+      - mynetwork
 
 # Network is required to enable container access another container.
 networks:
