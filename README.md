@@ -5,6 +5,11 @@ This is prepared as development projects.
 This environment downloads prebuilt image from [Docker Hub](https://cloud.docker.com/u/spycetek/repository/docker/spycetek/aep).  
 Dockerfile is defined in [spycetek/aep](https://bitbucket.org/spycetek/aep) repository.
 
+## About PHP Versions
+* Tag 3.x: PHP 8.0
+* Tag 2.x: PHP 7.4
+* Tag 1.x: PHP 7.3
+
 ## Preparation
 Create .env file by copying .env.dest file.
 
