@@ -3,7 +3,7 @@
 version: '3'
 services:
   # Nginx & PHP
-  web-server-php74:
+  web-server:
     env_file: .env
     image: spycetek/aep:a2.0-1.18-7.4-2
     privileged: true
@@ -26,14 +26,14 @@ services:
       - IS_OCT_CONTAINER=1
 
   # Enable HTTPS with localhost
-  https-portal-php74:
+  https-portal:
     image: steveltn/https-portal:1
     container_name: https-portal-php74
     ports:
       - '443:443'
       - "50081:80" # Not used, but for preventing host:80 mapped to https-portal:80
     links:
-      - web-server-php74
+      - web-server
     environment:
       STAGE: local
       DOMAINS: ${HTTPS_DOMAINS}
