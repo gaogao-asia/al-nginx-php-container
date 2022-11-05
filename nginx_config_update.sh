@@ -53,6 +53,9 @@ for filename in `find ${DOCKER_VOLUME_DIR} -maxdepth 4 -path "*/.dev/nginx/*.con
   docker exec -it $CONTAINER_NAME sh -c "if !(grep -Fqw \"$hostname\" /etc/hosts); then echo -e \"127.0.0.1\t$hostname\" >> /etc/hosts; fi"
 done
 
+# Execute hook script in .dev/php dir of each project dir.
+docker exec -it $CONTAINER_NAME sh -c 'find /var/www/html -maxdepth 3 -path "*/.dev/container_hook.sh" -exec bash {} \;'
+
 # Restart http service on container
 echo "Restarting php-fpm and nginx..."
 docker exec -it $CONTAINER_NAME systemctl restart php-fpm

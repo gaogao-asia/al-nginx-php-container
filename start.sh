@@ -48,6 +48,9 @@ docker exec -it $CONTAINER_NAME sh -c 'find /var/www/html -maxdepth 4 -path "*/.
 # Create symbolic link to nginx config files in .dev/php dir of each project dir.
 docker exec -it $CONTAINER_NAME sh -c 'find /var/www/html -maxdepth 4 -path "*/.dev/php/*.ini" | sed "s%\(/var/www/html/\)\([^/.]*\)\(/.*\)%\1\2\3 /etc/php.d/90-\2.ini%" | xargs -n 2 ln -s 2> /dev/null'
 
+# Execute hook script in .dev/php dir of each project dir.
+docker exec -it $CONTAINER_NAME sh -c 'find /var/www/html -maxdepth 3 -path "*/.dev/container_hook.sh" -exec bash {} \;'
+
 # Add hostname set as server_name in nginx conf files in each application to /etc/hosts in the container.
 # This is required for some tests when phpunit is executed inside of the container.
 # The part from `2>&1 |...` is for excluding error message from directories that requires admin access.

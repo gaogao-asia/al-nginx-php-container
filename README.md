@@ -104,3 +104,14 @@ docker-compose.ymlのディレクトリごと複製して別途コンテナを�
 * コンテナの共有フォルダを変更した場合、THIRDのプロジェクトファイル全体をそこへ移動する。
 * コンテナにrootユーザでログインしてプロジェクトディレクトリにてcomposer installを実行する。
   （依存が既にインストール済みであっても、初回はディレクトリのパーミッション修正のために必要になる。）
+
+
+## Apply Project Specific Configuration for Nginx & PHP
+### Nginx
+追加のNginx設定ファイルを、ファイル名に`.conf`拡張子を付けてプロジェクトディレクトリの `.dev/nginx/` ディレクトリに格納することで、コンテナ内の`/etc/nginx/conf.d`にコピーされ適用される。nginx_config_update.sh, start.sh, restart.shで適用される。
+
+### PHP
+追加のPHP設定ファイルを、ファイル名に`.ini`拡張子を付けてプロジェクトディレクトリの `.dev/php/` ディレクトリに格納することで、コンテナ内の`/etc/php.d/`に`90-`プレフィクスが付けられてコピーされ適用される。nginx_config_update.sh, start.sh, restart.shで適用される。
+
+### カスタムシェルスクリプト
+プロジェクトに`.dev/container_hook.sh`というファイルを作成し、実行権限を付与(`chmod a+x .dev/container_hook.sh`)することで、nginx_config_update.sh, start.sh, restart.shでnginxとphpサービスリスタート直前に実行される。
