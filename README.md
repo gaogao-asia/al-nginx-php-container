@@ -74,3 +74,14 @@ login.sh script lets you login to the container as `nginx` user.
 ## Check Web Server
 In web browser on your local machine, open `http://localhost:50080/`.  
 If the container is properly running, you should see the welcome page of Nginx.
+
+
+## Apply Project Specific Configuration for Nginx & PHP
+### Nginx
+追加のNginx設定ファイルを、ファイル名に`.conf`拡張子を付けてプロジェクトディレクトリの `.dev/nginx/` ディレクトリに格納することで、コンテナ内の`/etc/nginx/conf.d`にコピーされ適用される。nginx_config_update.sh, start.sh, restart.shで適用される。
+
+### PHP
+追加のPHP設定ファイルを、ファイル名に`.ini`拡張子を付けてプロジェクトディレクトリの `.dev/php/` ディレクトリに格納することで、コンテナ内の`/etc/php.d/`に`90-`プレフィクスが付けられてコピーされ適用される。nginx_config_update.sh, start.sh, restart.shで適用される。
+
+### カスタムシェルスクリプト
+プロジェクトに`.dev/container_hook.sh`というファイルを作成し、実行権限を付与(`chmod a+x .dev/container_hook.sh`)することで、nginx_config_update.sh, start.sh, restart.shでnginxとphpサービスリスタート直前に実行される。
