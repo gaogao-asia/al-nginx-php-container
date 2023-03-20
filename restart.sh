@@ -36,27 +36,38 @@ else
     fi
 fi
 
+# These options below for find command is to exclude these directories.
+# find command internally scans all files, but it will stop searching deeper once it finds if it has -prune option.
+# Options: '-name "node_modules" -prune -o -name "vendor" -prune -o -name ".git" -prune -o -name "storage" -prune'
+
 # Delete all broken symbolic links to nginx config files
+echo "Deleting broken symbolic links."
 docker exec -it $CONTAINER_NAME sh -c 'cd /etc/nginx/conf.d && find -L . -name . -o -type d -prune -o -type l -exec rm {} +'
 
 # Create symbolic link to nginx config files in .dev/nginx dir of each project dir.
-docker exec -it $CONTAINER_NAME sh -c 'find /var/www/html -maxdepth 4 -path "*/.dev/nginx/*.conf" | sed "s%\(/var/www/html/\)\([^/.]*\)\(/.*\)%\1\2\3 /etc/nginx/conf.d/\2.conf%" | xargs -n 2 ln -s 2> /dev/null'
+echo "Creating symbolic link to nginx config files."
+docker exec -it $CONTAINER_NAME sh -c 'find /var/www/html -maxdepth 4 -name "node_modules" -prune -o -name "vendor" -prune -o -name ".git" -prune -o -name "storage" -prune -o -path "*/.dev/nginx/*.conf" -print | sed "s%\(/var/www/html/\)\([^/.]*\)\(/.*\)%\1\2\3 /etc/nginx/conf.d/\2.conf%" | xargs -n 2 ln -s 2> /dev/null'
 
 # Create symbolic link to nginx config files in .dev/php dir of each project dir.
-docker exec -it $CONTAINER_NAME sh -c 'find /var/www/html -maxdepth 4 -path "*/.dev/php/*.ini" | sed "s%\(/var/www/html/\)\([^/.]*\)\(/.*\)%\1\2\3 /etc/php.d/90-\2.ini%" | xargs -n 2 ln -s 2> /dev/null'
+echo "Creating symbolic link to PHP config files."
+docker exec -it $CONTAINER_NAME sh -c 'find /var/www/html -maxdepth 4 -name "node_modules" -prune -o -name "vendor" -prune -o -name ".git" -prune -o -name "storage" -prune -o -path "*/.dev/php/*.ini" -print | sed "s%\(/var/www/html/\)\([^/.]*\)\(/.*\)%\1\2\3 /etc/php.d/90-\2.ini%" | xargs -n 2 ln -s 2> /dev/null'
 
 # Execute hook script in .dev/php dir of each project dir.
-docker exec -it $CONTAINER_NAME sh -c 'find /var/www/html -maxdepth 3 -path "*/.dev/container_hook.sh" -exec bash {} \;'
+echo "Executing hook script in .dev/php dir."
+docker exec -it $CONTAINER_NAME sh -c 'find /var/www/html -maxdepth 3 -name "node_modules" -prune -o -name "vendor" -prune -o -name ".git" -prune -o -name "storage" -prune -o -path "*/.dev/container_hook.sh" -print -exec bash {} \;'
 
 # Add hostname set as server_name in nginx conf files in each application to /etc/hosts in the container.
 # This is required for some tests when phpunit is executed inside of the container.
 # The part from `2>&1 |...` is for excluding error message from directories that requires admin access.
-for filename in `find ${DOCKER_VOLUME_DIR} -maxdepth 4 -path "*/.dev/nginx/*.conf" 2>&1 | fgrep -v "Permission denied"`; do
+echo "Adding hostnames to /etc/hosts in the container."
+for filename in `find ${DOCKER_VOLUME_DIR} -maxdepth 4 -name "node_modules" -prune -o -name "vendor" -prune -o -name ".git" -prune -o -name "storage" -prune -o -path "*/.dev/nginx/*.conf" -print 2>&1 | fgrep -v "Permission denied"`; do
   # Use `[[:space:]]` because `\s` does not work on macOS.
   hostname=$(grep -i 'server_name' $filename | sed -E 's/[[:space:]]+server_name[[:space:]]+([^;]+);/\1/')
   docker exec -it $CONTAINER_NAME sh -c "if !(grep -Fqw \"$hostname\" /etc/hosts); then echo -e \"127.0.0.1\t$hostname\" >> /etc/hosts; fi"
 done
 
 # Restart http & php services on container
+echo "Restarting php-fpm."
 docker exec -it $CONTAINER_NAME systemctl restart php-fpm
+echo "Restarting nginx."
 docker exec -it $CONTAINER_NAME systemctl restart nginx
