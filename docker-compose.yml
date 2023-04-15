@@ -4,8 +4,11 @@ services:
   # Nginx & PHP
   web-server:
     env_file: .env
-    image: spycetek/aep:a2.0-1.20-8.0-3
+    image: spycetek/aep:a2.0-1.22-8.0-1
     privileged: true
+    # `cgroup: host` is a workaround for "Failed to get D-Bus connection" error
+    # based on the info from https://qiita.com/amu-kuroneko/items/ab14f7a940de110a9c2b
+    cgroup: host
     command: /sbin/init
     #entrypoint: /root/start_nginx_php-fpm.sh
     container_name: ${CONTAINER_NAME}
