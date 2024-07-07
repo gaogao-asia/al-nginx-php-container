@@ -75,3 +75,8 @@ echo "Restarting php-fpm."
 docker exec -it $CONTAINER_NAME systemctl restart php-fpm
 echo "Restarting nginx."
 docker exec -it $CONTAINER_NAME systemctl restart nginx
+
+# Update local image default tag. Used to specify docker image in execute_php_on_container.sh for VSCode.
+# execute_php_on_container.sh is expected to be manually created & committed in each project source tree.
+IMAGE_NAME=`docker ps --filter "name=web-server-php80" --format "{{.Image}}"`
+docker tag $IMAGE_NAME ${IMAGE_NAME%:*}:latest
