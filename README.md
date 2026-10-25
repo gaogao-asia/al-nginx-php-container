@@ -1,117 +1,129 @@
-# Web Server Container with Amazon Linux & Nginx & PHP
-This is container running Nginx 1.20 with PHP 8.0 on Amazon Linux.  
-This is prepared as development projects.
+# GBC local PHP 8.5 environment
 
-This environment downloads prebuilt image from [Docker Hub](https://cloud.docker.com/u/spycetek/repository/docker/spycetek/aep).  
-Dockerfile is defined in [spycetek/aep](https://bitbucket.org/spycetek/aep) repository.
+`php85` branch of gaogao-asia/al-nginx-php-container. The existing
+`container-php80` checkout, its image tags and database are not modified.
 
-## About PHP Versions
-* Tag 3.x: PHP 8.0
-* Tag 2.x: PHP 7.4
-* Tag 1.x: PHP 7.3
+## Verified baseline
 
-## Preparation
-Create .env file by copying .env.dest file.
+- AL2023 base: 2023.12.20261016.0, pinned linux/amd64 image digest in Dockerfile.
+- Package repository: 2023.12.20261021, explicitly selected for patched PHP.
+- PHP CLI/FPM 8.5.12; nginx 1.30.5; Composer 2.10.3.
+- PHP includes GD, intl, zip, XML, MySQL and SQLite PDO extensions.
+- systemd runs nginx, php-fpm and crond. Docker supplies networking, so the
+  systemd-networkd wait-online unit is masked. Supervisor4.3.0 is included. Application workers and scheduler require the explicit
+  setup below after a new container is created; migrations are separate.
 
-Change `DOCKER_VOLUME_DIR` variable to the local path you want to mount to container's document root of the web server.
+## Setup
 
-In the example below, you should put directories of PHP projects under docker-www directory.
-```
-DOCKER_VOLUME_DIR=/Users/MyName/Documents/development/php_workspace/docker-www
-```
+Copy `.env.dist` to `.env` and set DOCKER_VOLUME_DIR to the **new** application
+parent (`/Users/kanji/development/docker_webserver_php85`). Never mount the PHP 8.0
+application here: Composer modifies vendor and modules in the mounted checkout.
+The new app and submodules use `migration/php85` and include the master regression tests.
+Set `APP_DIRECTORY=gbc-third-winter13` to select the current Winter 1.3 / Laravel 13
+candidate; nginx_config_update.sh and login.sh both honor this directory name.
+The selected app nginx configuration must use the same root path.
 
-```
-/Users/MyName/Documents/development/php_workspace/docker-www/php-project1
-/Users/MyName/Documents/development/php_workspace/docker-www/php-project2
-```
+The existing MariaDB `local-db` on `local-net` is reused. The PHP 8.5 application
+must use its own cloned database and restricted account. Database credentials
+belong in the application's ignored `.env`, not in this repository.
 
-You can also change `CONTAINER_NAME` and `HTTP_PORT` if you wish.
+Build with `docker compose build php85-web`. Stop the PHP 8.0 Web/HTTPS containers
+before starting this stack on the same host ports 80/443; do not delete them or stop
+the database. Then run `./start.sh`. After preparing the candidate app and reviewing/archiving
+cloned queued jobs, run `./setup_app_services.sh` to configure its workers and cron.
 
+Open `https://localhost-gbc-pilot/` (existing /etc/hosts entry).
+The separate HTTPS certificate is persisted in a project-specific named volume.
+Browser trust must be checked; the start script does not change host trust settings.
+For simultaneous comparison, set STANDARD_HTTP_PORT and HTTPS_PORT to unused ports
+and verify redirects and browser session isolation explicitly.
 
-## Controlling Web Server Container
-### Create docker network
-If you have not created a docker network with the name specified in .env file,
-create it with the command below. Example uses `local-net` as its name.  
-If you already have it, skip to "Create & Start Container" section.
+## Operations
 
-```
-docker network create --driver bridge local-net
-```
+- `./start.sh`: create/start new stack, install app nginx configuration, restart FPM/nginx.
+- `./stop.sh`: stop only this Compose project.
+- `./restart.sh`: restart this project and reload application configuration.
+- `./login.sh`: shell as webapp in the new app checkout.
+- `./setup_app_services.sh`: configure/enable Supervisor workers and per-minute scheduler
+  for the isolated local candidate. It rejects the original DB, cloud uploads and a
+  nonempty jobs table. Re-run after container recreation; ordinary restart preserves it.
+- `./delete.sh`: remove this project's containers while retaining certificates and external DB.
+- `docker compose exec -u webapp php85-web vendor/bin/phpunit -c phpunit-platform.xml`:
+  isolated regression suite, after compatible Composer dependencies are installed.
 
-To see if it is created successfully, execute below.
-```
-docker network ls
-```
+The start/stop scripts never retag spycetek/aep:latest, patch the old app, run winter:up,
+copy cloud credentials, or start unconfigured queue workers. Explicit service setup
+starts workers after its isolation and empty-queue checks. Existing queued payloads in a cloned DB
+must not be executed against real services inadvertently.
 
-If you want to remove the network, this is the command to do it.
-```
-docker network rm <network_name>
-```
+## Current implementation status (2026-10-25 JST)
 
-### Create and/or Start Container
-Note: If it is the first time to use the latest container image, it will download an image of approximately 1GB. Do it under preferably fast and steady internet connection.
+The image and TLS transport are working. The active app is `gbc-third-winter13`,
+using PHP 8.5.12, Winter 1.3 development sources and Laravel 13.38.0. The regression
+suite has 59 passing and 2 pre-existing skipped cases (61 total). The dedicated
+MariaDB clone has been migrated; the original database schema and row counts were
+unchanged. Home and login HTML, login assets, local image storage and thumbnail
+creation have passed their respective checks. The 9-case GBC application integration suite also passed. Winter/Twig and PHP 8.5
+runtime deprecations still occur during HTML rendering and remain unresolved.
+Authenticated browser workflows,
+queue execution, external integrations and EB deployment remain to be validated.
 
-start.sh script creates the container if not exists yet,  
-or starts container if there is one stopped.  
-If it is running already, it dose nothing.
-```
-./start.sh
-```
+Authentication routes do not boot plugin middleware. The app therefore uses Winter's
+core trusted-proxy configuration too. Its ignored local `.env` trusts only the HTTPS
+container's exact IP. After recreating containers, check that IP with
+`docker inspect --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' https-portal-php85`
+and update `TRUSTED_PROXIES` in the selected app `.env` if it changed. Keep the trust
+scope limited to the actual proxy. This repository's scripts do not modify app secrets.
 
-### Stop Container
-stop.sh script stops the container, but not deletes it.
-```
-./stop.sh
-```
-
-### Delete Container
-delete.sh delete the container. Data in the container will be lost.
-```
-./delete.sh
-```
-
-### Login to the Container
-login.sh script lets you login to the container as `nginx` user.
-```
-./login.sh
-```
-
-
-## Check Web Server
-In web browser on your local machine, open `http://localhost:50080/`.  
-If the container is properly running, you should see the welcome page of Nginx.
-
-
-## Updating Container & Having Multiple Web Server Containers
-新しいdocker-compose.ymlでコンテナを作成・更新するには、
-同じdocker-compose.ymlからは１つのコンテナしか作成できないため、
-docker-compose.ymlのディレクトリごと複製して別途コンテナを作成するか、
-既存のコンテナを削除して再作成する２つの方法がある。
-
-### 既存のコンテナを保持する場合
-* 既存のコンテナを作成したときのdocker-compose.ymlから変わっていない状態を維持しておく（更新しない）。
-* docker-compose.ymlが含まれるリポジトリを別の場所に再度クローンし、.envを作成し、
-  最新のコードでstart.shを実行する。.envのDOCKER_VOLUME_DIRは念の為異なるディレクトリを指定する。
-
-### 既存のコンテナを破棄する場合
-* 既存のコンテナを作成したdocker-compose.ymlはまだ更新しない
-* docker-compose.ymlがあるディレクトリで、delete.shを実行する
-* 削除が完了したら、git pullしてdoker-compose.ymlなどを最新にする
-* .env.distを参考に.envを更新する（HTTPSが有効化されているためHTTPS_DOMAINSが必要になる）
-* start.shを実行するとコンテナが作成されて起動する
-
-### コンテナ作成後
-* コンテナの共有フォルダを変更した場合、THIRDのプロジェクトファイル全体をそこへ移動する。
-* コンテナにrootユーザでログインしてプロジェクトディレクトリにてcomposer installを実行する。
-  （依存が既にインストール済みであっても、初回はディレクトリのパーミッション修正のために必要になる。）
+Consult the app's `docs/php-platform-migration/execution-winter13-2026-10-25.md`
+for fixed upstream commits, local core fixes, known missing local images and the
+remaining adoption criteria. Development Winter sources and local path repositories
+are still validation candidates; the current lock alone is not portable to EB.
 
 
-## Apply Project Specific Configuration for Nginx & PHP
-### Nginx
-追加のNginx設定ファイルを、ファイル名に`.conf`拡張子を付けてプロジェクトディレクトリの `.dev/nginx/` ディレクトリに格納することで、コンテナ内の`/etc/nginx/conf.d`にコピーされ適用される。nginx_config_update.sh, start.sh, restart.shで適用される。
+## Validation follow-up
 
-### PHP
-追加のPHP設定ファイルを、ファイル名に`.ini`拡張子を付けてプロジェクトディレクトリの `.dev/php/` ディレクトリに格納することで、コンテナ内の`/etc/php.d/`に`90-`プレフィクスが付けられてコピーされ適用される。nginx_config_update.sh, start.sh, restart.shで適用される。
+Authenticated HTTP tests using a dedicated admin and inactive fixture product in the
+cloned database passed login/2FA, Repeater add/save, image upload/removal, GBC image
+synthesis and resize delivery. A random dedicated queue processed one harmless job;
+existing jobs were not executed. Existing missing images will not be downloaded for
+now: the user selected generated test images only. Browser JavaScript and visual
+checks, Twig deprecations and always-on worker/cron behavior remain pending.
 
-### カスタムシェルスクリプト
-プロジェクトに`.dev/container_hook.sh`というファイルを作成し、実行権限を付与(`chmod a+x .dev/container_hook.sh`)することで、nginx_config_update.sh, start.sh, restart.shでnginxとphpサービスリスタート直前に実行される。
+The HTTPS container exited with code 137 (OOMKilled=false) during verification.
+The user freed port 443 and selected keeping the current configuration. Restart
+succeeded and HTTPS is active again on 443; no port/APP_URL change was made.
+The proxy IP remains 172.18.0.4. Authenticated create/update/preview and image delivery
+returned 200 after further backend null-value fixes. Regression tests: 63 tests,
+118 assertions, 61 passed and 2 existing skips; GBC integration: 9 passed.
+Telescope pages and its filtered API returned 200; anonymous access returned 403.
+Telescope's temporary web enablement was reverted to false. Twig API migration
+and browser JavaScript/visual verification remain pending.
+
+
+## Worker and Twig follow-up (2026-10-25 JST)
+
+Supervisor4.2.5 failed to import pkg_resources with setuptools82.0.1. Dockerfile now
+pins Supervisor4.3.0, and the r2 image was built and passed PHP8.5.12 / Supervisor CLI
+checks. Compose selects `gbc-local/al2023-php85:eb-4.13.13-r2`.
+
+The user selected archiving the 59 copied bulkFileManipulation jobs before starting
+the normal queues. The private SQL is `/private/tmp/gbc-php85-worker/jobs-59.sql`;
+it is not committed. The two workers processed harmless marker jobs as webapp,
+Supervisor recovered a terminated idle worker, and failed_jobs stayed at 16.
+The app uses database retry_after3660 and Supervisor stopwaitsecs3660 for the
+3600-second file worker. The scheduler runs via `/etc/cron.d/gbc-php85` each minute.
+
+Winter's local source fork now includes Twig parser/yield/capture compatibility
+(commit488e30de); 74 regression tests: 72 passed, 2 pre-existing skips, 129assertions.
+The separate GBC integration suite passed 9tests. Cold HTTP rendering of the custom
+product page and backend forms passed with no new warning/error logs in that scope.
+Browser JS/visual checks, cloud services, old job payloads and EB release/rollback
+validation remain pending. Composer/installers CLI deprecation remains documented.
+
+
+The Web container was then recreated from r2 and the documented nginx/service setup
+was re-run successfully. Both workers processed marker jobs; cron ran; HTTPS stayed
+on443 with the same proxy IP. Regression74tests passed with the same2existing skips.
+After recreating a container, use `./start.sh` followed by `./setup_app_services.sh`
+after reviewing pending jobs. A plain restart preserves the configured services.

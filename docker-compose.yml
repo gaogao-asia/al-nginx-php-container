@@ -1,52 +1,40 @@
-# The Docker image is based on https://hub.docker.com/_/ubuntu/
+name: gbc-php85
 services:
-  # Nginx & PHP
-  web-server:
-    env_file: .env
-    image: spycetek/aep:a2.0-1.22-8.0-1
+  php85-web:
+    build: .
+    image: gbc-local/al2023-php85:eb-4.13.13-r2
+    container_name: ${CONTAINER_NAME:-web-server-php85}
     privileged: true
-    # `cgroup: host` is a workaround for "Failed to get D-Bus connection" error
-    # based on the info from https://qiita.com/amu-kuroneko/items/ab14f7a940de110a9c2b
     cgroup: host
     command: /sbin/init
-    #entrypoint: /root/start_nginx_php-fpm.sh
-    container_name: ${CONTAINER_NAME}
     restart: unless-stopped
     ports:
-      - "${HTTP_PORT}:80"
-      - "80:80"
-    networks:
-      - mynetwork
+      - "${HTTP_PORT:-50085}:80"
+      - "${STANDARD_HTTP_PORT:-80}:80"
     volumes:
-      # Don't mount to /var/www because it's web server user's home directory
-      # and we don't want to mess it up.
-      - ${DOCKER_VOLUME_DIR}:/var/www/html:cached
-    # environment:
-    #   # This is used to know if the container is created by this docker-compose
-    #   # from inside of the container.
-    #   - IS_OCT_CONTAINER=1
-
-  # Enable HTTPS with localhost
-  https-portal:
+      - ${DOCKER_VOLUME_DIR:?Set DOCKER_VOLUME_DIR}:/var/www/html:cached
+    networks: [mynetwork]
+  php85-https:
     image: steveltn/https-portal:1
-    container_name: https-portal
+    container_name: https-portal-php85
+    restart: unless-stopped
     ports:
-      - '443:443'
-      - "50081:80" # Not used, but for preventing host:80 mapped to https-portal:80
-    links:
-      - web-server
+      - "${HTTPS_PORT:-443}:443"
+      - "${HTTPS_HTTP_PORT:-50086}:80"
     environment:
       STAGE: local
-      DOMAINS: ${HTTPS_DOMAINS}
-      CLIENT_MAX_BODY_SIZE: 50M
+      DOMAINS: "localhost-gbc-pilot -> http://php85-web:80"
+      CLIENT_MAX_BODY_SIZE: 64M
       PROXY_CONNECT_TIMEOUT: 1200
       PROXY_SEND_TIMEOUT: 1200
       PROXY_READ_TIMEOUT: 1200
-    networks:
-      - mynetwork
-
-# Network is required to enable container access another container.
+    volumes:
+      - php85-certificates:/var/lib/https-portal
+    networks: [mynetwork]
+    depends_on: [php85-web]
 networks:
   mynetwork:
-    name: ${NETWORK_NAME}
+    name: ${NETWORK_NAME:-local-net}
     external: true
+volumes:
+  php85-certificates:

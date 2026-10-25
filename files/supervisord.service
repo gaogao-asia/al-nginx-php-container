@@ -1,0 +1,10 @@
+[Unit]
+Description=GBC local queue process supervisor
+After=network.target
+[Service]
+ExecStart=/usr/local/bin/supervisord -n
+ExecStop=/usr/local/bin/supervisorctl shutdown
+ExecReload=/usr/local/bin/supervisorctl reload
+Restart=on-failure
+[Install]
+WantedBy=multi-user.target
