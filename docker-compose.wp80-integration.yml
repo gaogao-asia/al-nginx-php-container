@@ -1,0 +1,20 @@
+# Apply together with docker-compose.yml; never start the old PHP80 stack.
+services:
+  wp80-integration:
+    image: spycetek/aep:a2.0-1.22-8.0-1
+    container_name: web-server-wp80-integration
+    privileged: true
+    cgroup: host
+    command: /sbin/init
+    restart: unless-stopped
+    volumes:
+      - ${DOCKER_VOLUME_DIR}/wp-only1-multi-php80-integration:/var/www/html/wp-only1-multi:cached
+      - ./files/wp80-integration/wordpress.conf:/etc/nginx/conf.d/wp-integration.conf:ro
+      - ./files/wp80-integration/isolation.php:/var/www/html/wp-only1-multi/wp-content/mu-plugins/000-integration-isolation.php:ro
+    networks: [mynetwork]
+  php85-https:
+    environment:
+      DOMAINS: "localhost-gbc-pilot -> http://php85-web:80, localhost-wp-only1-multi -> http://wp80-integration:80"
+    networks:
+      mynetwork:
+        aliases: [localhost-gbc-pilot, localhost-wp-only1-multi]

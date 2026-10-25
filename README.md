@@ -137,3 +137,38 @@ types were fixed in source forks; regression78tests:76passed,2existing skips.
 The proxy IP later changed to172.18.0.3, producing a CSRF403 with the stale setting.
 Automatic synchronization above fixes that restart/recreation case. Browser checks
 remain pending; see the app docs/php-platform-migration/browser-validation-2026-10-25.md.
+
+
+## PHP80 WordPressとPHP85 GBCの並行検証
+
+PHP85ブランチの追加Composeを使う。旧 `container-php80` の起動スクリプトは同時実行しない。
+既存の443番HTTPSプロキシで `localhost-gbc-pilot` をPHP85へ、`localhost-wp-only1-multi` を専用PHP80へ転送する。専用PHP80はホストポートを公開しない。
+
+現在の検証コピーは `${DOCKER_VOLUME_DIR}/wp-only1-multi-php80-integration`、DBは同じ `local-db` 内の `wp-only1-multi-php85-integration`。元WordPress/GBC DBへアクセスできない専用ユーザーを使う。DBコンテナ・ボリュームは追加しない。コピーには既存ローカルWordPressの作業中のコードも含む。メール、外部HTTP、WP Cron、Action Schedulerの非同期起動を検証コピーだけで抑止する。
+
+準備済み環境の起動と復帰:
+
+```bash
+./start_parallel_wp80.sh
+./stop_parallel_wp80.sh
+```
+
+起動処理は専用WordPressのnginx/PHP-FPM設定、プロキシ切り替え、GBCのTRUSTED_PROXIES同期、両コンテナのローカル証明書信頼設定を行う。プロキシ切り替え時は短時間HTTPSが途切れる。PHP85のWebコンテナ・ワーカー・MariaDBは再作成しない。`.parallel-wp80-active` がある間、通常のstart/restart/stop/deleteは停止して専用コマンドへ誘導する。元に戻す場合も証明書ボリューム・複製DB・コピーしたファイルは残る。手動で `down -v` や `--remove-orphans` を実行しない。
+
+起動時に公開証明書だけを `.local-certificates/` へ出力する。ブラウザーで未信頼なら、Mac側で `localhost-wp-only1-multi.crt` をキーチェーンへ追加してSSLの信頼を設定する。証明書検証を無効化しない。秘密鍵・認証情報はこのディレクトリに出力しない。
+
+### 初回だけの準備（既存コピーには再実行しない）
+
+```bash
+./prepare_wp80_integration.sh /Users/kanji/development/docker_webserver_php80/wp-only1-multi
+# コピー先・DBが既にあれば上書きせず停止する。非公開ダンプ保存先が表示される。
+docker compose -f docker-compose.yml -f docker-compose.wp80-integration.yml up -d --no-deps wp80-integration
+docker exec -i web-server-wp80-integration bash < files/wp80-integration/setup.sh
+docker exec -i -u webapp web-server-wp80-integration php /dev/stdin < files/wp80-integration/configure.php
+```
+
+`configure.php` は確認済みのblog ID 5・商品ID 5（wallet-n1）だけを商品283の `wallet-n1-6` へ対応させ、対象サイトとrootサイトをHTTPSへ変更する。対象DB・商品・設定の存在を検証し、不一致なら停止する。出力する要約の `mail_intercepted` / `external_http_blocked` / `async_runner_disabled` が全てtrueであることを確認した後、コピー先直下に `.integration-ready` を作成して通常の並行起動へ進む。DBや商品が異なる環境で値を推測して実行しない。
+
+準備スクリプトは全テーブルInnoDBを確認し、single-transactionで複製する。パスワードは生成してコピー側wp-config.phpだけへ保存する。中断時は部分的なコピー・DBを調査し、自動削除や上書きで再開しない。秘密情報・ダンプ・CookieをGitへ追加しない。
+
+検証URL: `https://localhost-wp-only1-multi/gbc-pilot/product/wallet-n1/`。この中のiframeは `https://localhost-gbc-pilot/custom/standfield/wallet-n1-6` を参照する。シェアのpostMessageや選択状態復元のブラウザー検証は、環境起動の検証とは別に実施する。

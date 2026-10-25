@@ -1,2 +1,5 @@
 **/.env
 **/.docker-sync
+
+.parallel-wp80-active
+.local-certificates/
