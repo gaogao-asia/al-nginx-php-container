@@ -70,10 +70,11 @@ queue execution, external integrations and EB deployment remain to be validated.
 
 Authentication routes do not boot plugin middleware. The app therefore uses Winter's
 core trusted-proxy configuration too. Its ignored local `.env` trusts only the HTTPS
-container's exact IP. After recreating containers, check that IP with
-`docker inspect --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' https-portal-php85`
-and update `TRUSTED_PROXIES` in the selected app `.env` if it changed. Keep the trust
-scope limited to the actual proxy. This repository's scripts do not modify app secrets.
+container's exact IP. nginx_config_update.sh now reads the HTTPS container's actual
+IP and synchronizes only TRUSTED_PROXIES in the selected app .env before restarting
+FPM/nginx. start.sh and restart.sh invoke it. After manually recreating only the HTTPS
+container, run ./nginx_config_update.sh too. The app .env keeps mode0600; no wildcard
+trust or credential changes are introduced.
 
 Consult the app's `docs/php-platform-migration/execution-winter13-2026-10-25.md`
 for fixed upstream commits, local core fixes, known missing local images and the
@@ -127,3 +128,12 @@ was re-run successfully. Both workers processed marker jobs; cron ran; HTTPS sta
 on443 with the same proxy IP. Regression74tests passed with the same2existing skips.
 After recreating a container, use `./start.sh` followed by `./setup_app_services.sh`
 after reviewing pending jobs. A plain restart preserves the configured services.
+
+
+The later CSV import check verified all131icons and531preview images on local disk.
+A missing shared favorite PNG was copied from the public production CDN into the new
+app only;147referenced local assets returned200. Null translation keys and list column
+types were fixed in source forks; regression78tests:76passed,2existing skips.
+The proxy IP later changed to172.18.0.3, producing a CSRF403 with the stale setting.
+Automatic synchronization above fixes that restart/recreation case. Browser checks
+remain pending; see the app docs/php-platform-migration/browser-validation-2026-10-25.md.
