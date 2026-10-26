@@ -26,6 +26,7 @@ $ready || { echo 'WordPress PHP-FPM did not start.' >&2; exit 1; }
 docker exec -i web-server-wp80-integration bash < files/wp80-integration/setup.sh
 "${compose[@]}" up -d --no-deps php85-https
 ./nginx_config_update.sh
+./files/wp80-integration/http_redirect.sh enable
 # https-portal creates local self-signed leaf certificates; trust only these exact public certificates.
 for host in localhost-gbc-pilot localhost-wp-only1-multi; do
   cert=$(mktemp)

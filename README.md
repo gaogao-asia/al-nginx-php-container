@@ -172,3 +172,5 @@ docker exec -i -u webapp web-server-wp80-integration php /dev/stdin < files/wp80
 準備スクリプトは全テーブルInnoDBを確認し、single-transactionで複製する。パスワードは生成してコピー側wp-config.phpだけへ保存する。中断時は部分的なコピー・DBを調査し、自動削除や上書きで再開しない。秘密情報・ダンプ・CookieをGitへ追加しない。
 
 検証URL: `https://localhost-wp-only1-multi/gbc-pilot/product/wallet-n1/`。この中のiframeは `https://localhost-gbc-pilot/custom/standfield/wallet-n1-6` を参照する。シェアのpostMessageや選択状態復元のブラウザー検証は、環境起動の検証とは別に実施する。
+
+並行モードでは `http://localhost-wp-only1-multi/` へのアクセスをパス・クエリーを維持して同ホストのHTTPSへ301転送する。80番はPHP85コンテナが保持するため、専用のホスト名別nginx設定をそこへ追加する。PHP85単独へ復帰する際にこの設定を削除する。
