@@ -174,3 +174,19 @@ docker exec -i -u webapp web-server-wp80-integration php /dev/stdin < files/wp80
 検証URL: `https://localhost-wp-only1-multi/gbc-pilot/product/wallet-n1/`。この中のiframeは `https://localhost-gbc-pilot/custom/standfield/wallet-n1-6` を参照する。シェアのpostMessageや選択状態復元のブラウザー検証は、環境起動の検証とは別に実施する。
 
 並行モードでは `http://localhost-wp-only1-multi/` へのアクセスをパス・クエリーを維持して同ホストのHTTPSへ301転送する。80番はPHP85コンテナが保持するため、専用のホスト名別nginx設定をそこへ追加する。PHP85単独へ復帰する際にこの設定を削除する。
+
+
+### AWS GBC test-3へ接続する別サイト（2026-10-27）
+
+同じ検証用WordPressコピー・複製DB内に、blog **11**の`/gbc-aws-test3/`を追加した。元のblog5と元PHP80 WordPressは保持する。WordPress6.1.1／WooCommerce5.3.1／PHP8.0.28は維持した。
+
+親ページ: `https://localhost-wp-only1-multi/gbc-aws-test3/product/php85-aws-test3-watch-belt/`。
+WooCommerce商品181の`only1_custom_product_code=custom-order-watch-belt-2`、専用サイトのpartner=`ishikuni`・host=`https://gbc-pilot-test.goodbet.jp`で、新GBCの商品174（external_product_id=181）へ対応する。GBC側の商品設定は変更していない。
+
+このサイトだけで、連携プラグインmaster **3a3ec8d84a8e996b4c588db7974f278d4f458d31 / 1.41.6**を別フォルダー`wp-only1-integration-woocommerce-plugin-aws-test3`から有効化する。blog5は元プラグインを維持する。通常の並行起動スクリプトをそのまま使え、AWS EC2の追加起動やSG変更は不要。
+
+`isolation.php`はこのDB・domain・site pathだけに新testホストのHTTPS/443を追加許可する。他サイトの新testアクセスと他の外部HTTPは遮断する。WordPress側の`WP_ACCESSIBLE_HOSTS`にもホストを追加するが、mu-plugin側のsite制限は維持する。SSL検証、メール遮断、cron停止、非同期runner停止も維持する。
+
+再構築が必要な場合だけ、既存サイト・フォルダーが無いことを確認し、固定masterのcloneと新testから取得したprivate JSONを用意して`./prepare_wp80_aws_test3.sh /private/path/gbc-config.json`を使用する。必要なJSON項目は`gbc_host`、`partner`、`product_slug`、`gbc_product_id`、`wc_product_id`、`price`、`api_key`。APIキーをGitや端末出力へ載せない。スクリプトは先に既存サイトを検出して拒否し、既存サイトの上書きや自動削除は行わない。作成前のDBダンプ・wp-configは非公開一時領域へ保存する。準備後は一時JSONの扱いを確認する。
+
+HTTP/API/カートの確認は実施済みだが、postMessageと画像・価格の目視確認は実ブラウザーで別途行う。実施結果はアプリ側の`docs/php-platform-migration/execution-aws-wordpress-integration-2026-10-27.md`を参照する。

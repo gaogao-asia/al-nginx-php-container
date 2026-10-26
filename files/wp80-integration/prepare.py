@@ -26,7 +26,7 @@ p=dst/'wp-config.php'; text=p.read_text()
 for key,value in [('DB_NAME','wp-only1-multi-php85-integration'),('DB_USER','wp80_integration'),('DB_PASSWORD',pw),('DB_HOST','local-db')]:
  text,n=re.subn(r"define\(\s*['\"]"+key+r"['\"]\s*,\s*['\"][^'\"]*['\"]\s*\);", "define( '"+key+"', '"+value+"' );",text)
  if n!=1: raise SystemExit('Unexpected config field '+key)
-text=text.replace("require_once ABSPATH . 'wp-settings.php';", "// Isolated PHP85 integration copy; never schedule background work or contact external hosts.\ndefine('DISABLE_WP_CRON', true);\ndefine('AUTOMATIC_UPDATER_DISABLED', true);\ndefine('DISALLOW_FILE_MODS', true);\ndefine('WP_HTTP_BLOCK_EXTERNAL', true);\ndefine('WP_ACCESSIBLE_HOSTS', 'localhost-gbc-pilot,localhost-wp-only1-multi');\nrequire_once ABSPATH . 'wp-settings.php';")
+text=text.replace("require_once ABSPATH . 'wp-settings.php';", "// Isolated PHP85 integration copy; never schedule background work; HTTP is restricted further by the isolation mu-plugin.\ndefine('DISABLE_WP_CRON', true);\ndefine('AUTOMATIC_UPDATER_DISABLED', true);\ndefine('DISALLOW_FILE_MODS', true);\ndefine('WP_HTTP_BLOCK_EXTERNAL', true);\ndefine('WP_ACCESSIBLE_HOSTS', 'localhost-gbc-pilot,localhost-wp-only1-multi,gbc-pilot-test.goodbet.jp');\nrequire_once ABSPATH . 'wp-settings.php';")
 p.write_text(text);p.chmod(0o600)
 (dst/'wp-content/mu-plugins').mkdir(exist_ok=True)
 (dst/'wp-content/mu-plugins/000-integration-isolation.php').touch()
