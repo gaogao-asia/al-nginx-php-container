@@ -1,0 +1,9 @@
+# Apply after docker-compose.yml and docker-compose.wp80-integration.yml.
+# AWS test uses only the local parent WordPress; do not resolve the stopped local GBC.
+services:
+  php85-web:
+    profiles: [local-gbc]
+  php85-https:
+    depends_on: !reset []
+    environment:
+      DOMAINS: "localhost-wp-only1-multi -> http://wp80-integration:80"

@@ -192,3 +192,14 @@ WooCommerce商品181の`only1_custom_product_code=custom-order-watch-belt-2`、�
 HTTP/API/カートの確認は実施済みだが、postMessageと画像・価格の目視確認は実ブラウザーで別途行う。実施結果はアプリ側の`docs/php-platform-migration/execution-aws-wordpress-integration-2026-10-27.md`を参照する。
 
 2026-10-27 税率準備の修正: site11へ税表示optionだけをコピーし、site5の税率行をコピーしていなかったため、GBC税込45,100円に対してカート41,000円となった。`copy_aws_test3_tax_rates.php`でsite11の空の税率表に元と同じ10%行を複製し、通常カートの単価/小計/合計45,100円（税4,100円）をHTTPで確認した。初回作成スクリプトにも同じ処理を追加した。既存税率の上書きは拒否し、site5の税率と既存Browserのカートは変更しない。WooCommerceカートはGET時に再計算するため、既存の検証カートは通常の再読み込みで確認する。
+
+### AWS test検証時にローカルGBCを停止する構成
+
+AWSのGBCをiframeに表示する`/gbc-aws-test3/`だけを検証する場合は、親WordPress・HTTPSプロキシ・DBだけでよい。ローカルGBCのupstream設定を残したままPHP85を停止すると、HTTPSプロキシ再起動時に名前解決で失敗するため、次の追加overrideを使う。
+
+```sh
+docker compose -f docker-compose.yml -f docker-compose.wp80-integration.yml -f docker-compose.wp80-aws-test3.yml up -d wp80-integration php85-https
+docker stop web-server-php85
+```
+
+追加overrideはローカルGBCをprofile対象にし、HTTPSプロキシの依存先と配信ホストを親WordPressだけにする。既存証明書volumeとDBを再利用する。HTTPSの親WordPressは利用できるが、ローカルGBCと80番のHTTP転送は利用できない。このAWS専用モードの再起動には上の3ファイルを指定する。ローカルGBCも検証する従来の並行モードへ戻す際は、`docker compose up -d php85-web`でGBCを起動してから`./start_parallel_wp80.sh`を実行する。
