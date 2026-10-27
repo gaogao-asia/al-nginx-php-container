@@ -190,3 +190,5 @@ WooCommerce商品181の`only1_custom_product_code=custom-order-watch-belt-2`、�
 再構築が必要な場合だけ、既存サイト・フォルダーが無いことを確認し、固定masterのcloneと新testから取得したprivate JSONを用意して`./prepare_wp80_aws_test3.sh /private/path/gbc-config.json`を使用する。必要なJSON項目は`gbc_host`、`partner`、`product_slug`、`gbc_product_id`、`wc_product_id`、`price`、`api_key`。APIキーをGitや端末出力へ載せない。スクリプトは先に既存サイトを検出して拒否し、既存サイトの上書きや自動削除は行わない。作成前のDBダンプ・wp-configは非公開一時領域へ保存する。準備後は一時JSONの扱いを確認する。
 
 HTTP/API/カートの確認は実施済みだが、postMessageと画像・価格の目視確認は実ブラウザーで別途行う。実施結果はアプリ側の`docs/php-platform-migration/execution-aws-wordpress-integration-2026-10-27.md`を参照する。
+
+2026-10-27 税率準備の修正: site11へ税表示optionだけをコピーし、site5の税率行をコピーしていなかったため、GBC税込45,100円に対してカート41,000円となった。`copy_aws_test3_tax_rates.php`でsite11の空の税率表に元と同じ10%行を複製し、通常カートの単価/小計/合計45,100円（税4,100円）をHTTPで確認した。初回作成スクリプトにも同じ処理を追加した。既存税率の上書きは拒否し、site5の税率と既存Browserのカートは変更しない。WooCommerceカートはGET時に再計算するため、既存の検証カートは通常の再読み込みで確認する。

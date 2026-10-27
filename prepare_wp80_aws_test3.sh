@@ -29,7 +29,7 @@ PHP_CHECK
 [[ ! -e "$plugin_target" ]] || { echo 'Plugin target exists; inspect it first.' >&2; exit 3; }
 umask 077
 private_work=$(mktemp -d "${TMPDIR:-/tmp}/gbc-wp-aws-test3.XXXXXX")
-trap 'docker exec web-server-wp80-integration rm -f /tmp/gbc-aws-test3-private.json >/dev/null' EXIT
+trap 'docker exec web-server-wp80-integration rm -f /tmp/gbc-aws-test3-private.json /tmp/gbc-aws-test3-tax-rates.php >/dev/null' EXIT
 docker exec local-db sh -c 'MYSQL_PWD="$MARIADB_ROOT_PASSWORD" exec mariadb-dump -uroot --single-transaction --skip-lock-tables --hex-blob wp-only1-multi-php85-integration' > "$private_work/wordpress-before.sql"
 cp "$wp_copy/wp-config.php" "$private_work/wp-config-before.php"
 chmod 600 "$private_work/wordpress-before.sql" "$private_work/wp-config-before.php"
@@ -46,6 +46,7 @@ PY_CONFIG
 mkdir -m 755 "$plugin_target"
 (umask 022; git -C "$plugin_source" archive "$pin" | tar -xf - -C "$plugin_target")
 docker exec -i --user webapp web-server-wp80-integration sh -c 'umask 077; cat > /tmp/gbc-aws-test3-private.json' < "$private_config"
+docker exec -i --user webapp web-server-wp80-integration sh -c 'umask 077; cat > /tmp/gbc-aws-test3-tax-rates.php' < files/wp80-integration/copy_aws_test3_tax_rates.php
 docker exec -i --user webapp web-server-wp80-integration php < files/wp80-integration/configure_aws_test3.php > "$private_work/site-created.json"
 cat "$private_work/site-created.json"
 printf 'Private provisioning records: %s\n' "$private_work"

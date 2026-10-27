@@ -29,7 +29,8 @@ $settings=[];
 foreach (['woocommerce_currency','woocommerce_currency_pos','woocommerce_price_num_decimals',
     'woocommerce_price_decimal_sep','woocommerce_price_thousand_sep','woocommerce_calc_taxes',
     'woocommerce_prices_include_tax','woocommerce_default_country','woocommerce_tax_based_on',
-    'woocommerce_tax_display_shop','woocommerce_tax_display_cart'] as $key) { $settings[$key]=get_option($key); }
+    'woocommerce_tax_display_shop','woocommerce_tax_display_cart',
+    'woocommerce_default_customer_address','woocommerce_tax_round_at_subtotal'] as $key) { $settings[$key]=get_option($key); }
 $blog=wpmu_create_blog('localhost-wp-only1-multi','/gbc-aws-test3/',
     'GBC AWS test-3 validation',(int)$admins[0],['public'=>0],1);
 if (is_wp_error($blog)) { throw new RuntimeException(); }
@@ -45,6 +46,8 @@ update_option('blog_public',0);
 update_option('permalink_structure',$permalinks);
 WC_Install::install(); WC_Install::create_pages();
 foreach ($settings as $key=>$value) { update_option($key,$value); }
+require '/tmp/gbc-aws-test3-tax-rates.php';
+$taxCopy=gbc_copy_source_tax_rates_to_aws_site((int)$blog);
 $opts['custom_site_host']=$private['gbc_host']; $opts['partner_slug']=$private['partner'];
 $opts['use_gbc_third']=1; $opts['api_key']=$private['api_key'];
 update_option('only1-integration-woocommerce',$opts);
@@ -62,7 +65,7 @@ $GLOBALS['wp_rewrite']->init(); flush_rewrite_rules(false);
 $result=['created'=>true,'db'=>DB_NAME,'blog_id'=>(int)$blog,'product_id'=>$id,
     'product_url'=>get_permalink($id),'cart_url'=>wc_get_cart_url(),
     'gbc_host'=>$private['gbc_host'],'gbc_product_id'=>174,'partner'=>$private['partner'],
-    'product_slug'=>$private['product_slug'],'source_blog5_before'=>$before];
+    'product_slug'=>$private['product_slug'],'source_blog5_before'=>$before,'tax_copy'=>$taxCopy];
 switch_to_blog(5);
 $result['source_blog5_unchanged']=$before['integration_options_sha256']===hash('sha256',serialize(get_option('only1-integration-woocommerce')))
     && $before['product5_metadata_sha256']===hash('sha256',serialize(get_post_meta(5))) && $before['home']===get_option('home');
