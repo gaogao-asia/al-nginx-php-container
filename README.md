@@ -30,8 +30,9 @@ Prepare the application environment and fixed dependencies using its `.composer/
 All scripts select `/var/www/html/${APP_DIRECTORY}` inside the container.
 `nginx_config_update.sh` renders the app nginx template with that root and installs
 a copy; it does not modify the tracked app configuration. A differently named clone
-works by changing only `APP_DIRECTORY` in the container `.env`. The existing local
-migration checkout therefore keeps `APP_DIRECTORY=gbc-third-winter13`; no rename is required.
+works by changing only `APP_DIRECTORY` in the container `.env`. For example, a clone
+named `gbc-third-winter13` can use `APP_DIRECTORY=gbc-third-winter13` without editing
+its nginx template. The standard setup uses `APP_DIRECTORY=gbc-third`.
 
 The existing MariaDB `local-db` on `local-net` is reused. The PHP 8.5 application
 must use its own cloned database and restricted account. Database credentials
