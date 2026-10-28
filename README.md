@@ -1,7 +1,8 @@
 # GBC local PHP 8.5 environment
 
-`php85` branch of gaogao-asia/al-nginx-php-container. The existing
-`container-php80` checkout, its image tags and database are not modified.
+PHP85 configuration on `master` of gaogao-asia/al-nginx-php-container. The legacy
+configuration is retained on `php80`; the existing `container-php80` checkout,
+its image tags and database are not modified.
 
 ## Verified baseline
 
@@ -15,13 +16,23 @@
 
 ## Setup
 
-Copy `.env.dist` to `.env` and set DOCKER_VOLUME_DIR to the **new** application
-parent (`/Users/kanji/development/docker_webserver_php85`). Never mount the PHP 8.0
-application here: Composer modifies vendor and modules in the mounted checkout.
-The new app and submodules use `migration/php85` and include the master regression tests.
-Set `APP_DIRECTORY=gbc-third-winter13` to select the current Winter 1.3 / Laravel 13
-candidate; nginx_config_update.sh and login.sh both honor this directory name.
-The selected app nginx configuration must use the same root path.
+Clone the application with its submodules into a separate application parent:
+
+```sh
+git clone --recurse-submodules git@github.com:gaogao-asia/gbc-third.git /absolute/path/to/application-parent/gbc-third
+```
+
+Copy `.env.dist` to `.env`, set `DOCKER_VOLUME_DIR` to that **parent** directory,
+and use `APP_DIRECTORY=gbc-third` (the default clone name). Do not select the PHP80
+backup checkout: Composer modifies vendor and modules in the mounted application.
+Prepare the application environment and fixed dependencies using its `.composer/README.md`.
+
+All scripts select `/var/www/html/${APP_DIRECTORY}` inside the container.
+`nginx_config_update.sh` renders the app nginx template with that root and installs
+a copy; it does not modify the tracked app configuration. A differently named clone
+works by changing only `APP_DIRECTORY` in the container `.env`. For example, a clone
+named `gbc-third-winter13` can use `APP_DIRECTORY=gbc-third-winter13` without editing
+its nginx template. The standard setup uses `APP_DIRECTORY=gbc-third`.
 
 The existing MariaDB `local-db` on `local-net` is reused. The PHP 8.5 application
 must use its own cloned database and restricted account. Database credentials

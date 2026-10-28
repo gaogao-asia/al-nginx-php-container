@@ -2,7 +2,7 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 set -a; source .env; set +a
-APP_DIRECTORY=${APP_DIRECTORY:-gbc-third-winter13}
+APP_DIRECTORY=${APP_DIRECTORY:-gbc-third}
 [[ "$APP_DIRECTORY" =~ ^[a-zA-Z0-9_-]+$ ]] || { echo 'Invalid APP_DIRECTORY' >&2; exit 1; }
 APP_PATH="/var/www/html/$APP_DIRECTORY"
 # Local candidate only. Never start workers against the original DB or cloud uploads.

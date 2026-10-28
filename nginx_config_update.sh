@@ -9,7 +9,15 @@ docker exec -i -u webapp "${CONTAINER_NAME}" php /dev/stdin "$proxy_ip" "/var/ww
 docker exec -e APP_DIRECTORY="$APP_DIRECTORY" "${CONTAINER_NAME}" bash -euc '
   app_root="/var/www/html/$APP_DIRECTORY"
   test -f "$app_root/.dev/nginx/local-docker.conf"
-  ln -sfn "$app_root/.dev/nginx/local-docker.conf" /etc/nginx/conf.d/gbc-third.conf
+  # Install a rendered copy: an alternate clone name must not require editing the app.
+  template="$app_root/.dev/nginx/local-docker.conf"
+  [[ $(grep -Ec "^[[:blank:]]*root[[:blank:]]+" "$template") == 1 ]]
+  config=$(mktemp /etc/nginx/conf.d/.gbc-third.XXXXXX)
+  trap "rm -f -- $config" EXIT
+  sed -E "s@^([[:blank:]]*root[[:blank:]]+)/var/www/html/[A-Za-z0-9_-]+;[[:blank:]]*\$@\1$app_root;@" "$template" > "$config"
+  grep -Eq "^[[:blank:]]*root[[:blank:]]+$app_root;[[:blank:]]*$" "$config"
+  chmod 0644 "$config"
+  mv -fT "$config" /etc/nginx/conf.d/gbc-third.conf
   mkdir -p "$app_root/storage/logs" "$app_root/storage/framework/cache"
   chown -R webapp:webapp "$app_root/storage"
   nginx -t

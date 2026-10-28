@@ -3,3 +3,6 @@
 
 .parallel-wp80-active
 .local-certificates/
+
+# macOS Finder metadata
+.DS_Store
