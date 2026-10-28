@@ -1,34 +1,8 @@
-#!/bin/bash
-
-# cd to the directory where this file exists
-cd $( dirname "${BASH_SOURCE[0]}" )
-if [[ ! -f .env ]]
-then
-  echo ".env file is missing. Create based on .env.dist."
-  exit 1
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")"
+if [[ -f .parallel-wp80-active ]]; then
+    echo 'Parallel WordPress mode is selected. Use start_parallel_wp80.sh or stop_parallel_wp80.sh first.' >&2
+    exit 1
 fi
-
-source .env
-
-RED='\033[0;31m'
-docker ps &> /dev/null
-if [ $? -ne 0 ]; then
-    echo -e "${RED}[ERROR] Please make sure that docker app is started."
-fi
-
-status=`docker inspect -f {{.State.Running}} $CONTAINER_NAME 2> /dev/null`
-if [ $? -eq 1 ]; then # container not exist yet
-    set +x
-    echo "$CONTAINER_NAME container does not exist."
-else
-    if [ "$status" = "false" ]; then # container not running
-        set +x
-        echo "$CONTAINER_NAME container is already stopped."
-    else
-        docker exec -it $CONTAINER_NAME systemctl stop nginx
-        docker exec -it $CONTAINER_NAME systemctl stop php-fpm
-        sleep 2
-
-        docker compose stop
-    fi
-fi
+docker compose stop

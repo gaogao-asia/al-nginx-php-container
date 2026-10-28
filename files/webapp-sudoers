@@ -1,0 +1,2 @@
+# Local development container only; matching existing Composer/service setup.
+webapp ALL=(root) NOPASSWD: /usr/local/bin/supervisorctl *
