@@ -1,0 +1,32 @@
+name: gbc-local-mariadb
+services:
+  local-db:
+    image: mariadb:10.11.16
+    container_name: ${CONTAINER_NAME:-local-db}
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:?Set MARIADB_ROOT_PASSWORD in .env}
+      TZ: Asia/Tokyo
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --lower-case-table-names=2
+      - --max-allowed-packet=64M
+      - --sql-mode=ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION
+    ports:
+      - "${DB_PORT:-53306}:3306"
+    volumes:
+      - ${DOCKER_VOLUME_DIR:-./mariadb_data}:/var/lib/mysql
+    networks:
+      - mynetwork
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+networks:
+  mynetwork:
+    name: ${NETWORK_NAME:-local-net}
+    external: true
