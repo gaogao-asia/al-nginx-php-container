@@ -1,3 +1,7 @@
 .git
 .env
 *.log
+.local-certificates/
+mariadb/.env
+mariadb/mariadb_data/
+mariadb/backups/

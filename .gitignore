@@ -6,3 +6,5 @@
 
 # macOS Finder metadata
 .DS_Store
+/mariadb/mariadb_data/
+/mariadb/backups/
